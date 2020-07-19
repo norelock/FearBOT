@@ -1,0 +1,136 @@
+{
+    "connection_data": {
+        "address": "95.217.228.254",
+        "ports": {
+            "query": 10011,
+            "voice": 9987
+        },
+        "login": "serveradmin",
+        "password": "najlepszybotnaswiecieboinnesazjebane"
+    },
+    "instances": [
+        {
+            "id": 1,
+            "default_channel": 2,
+            "name": "Administrator",
+            "plugins": [
+                {
+                    "name": "channelRegister",
+                    "enabled": true,
+                    "config": {
+                        "channels": [
+                            {
+                                "channel_id": "49",
+                                "group_id": 10,
+                                "time_spent": 5
+                            },
+                            {
+                                "channel_id": "50",
+                                "group_id": 11,
+                                "time_spent": 5
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "serverName",
+                    "enabled": true,
+                    "config": {
+                        "server_name": "fearBOT • Oficjalny support ([online]/[max_slots])"
+                    }
+                }
+            ],
+            "events": [
+                {
+                    "name": "multiFunction",
+                    "enabled": true,
+                    "config": {
+                        "channels": [
+                            {
+                                "enabled": true,
+                                "channel_id": "52",
+                                "channel_name": "• Dostępni użytkownicy: [online]/[max_slots]"
+                            },
+                            {
+                                "enabled": true,
+                                "channel_id": "53",
+                                "channel_name": "• Ilość kanałów: [channels]"
+                            },
+                            {
+                                "enabled": true,
+                                "channel_id": "54",
+                                "channel_name": "• Aktualna godzina: [clock]"
+                            },
+                            {
+                                "enabled": true,
+                                "channel_id": "55",
+                                "channel_name": "• Czas działania serwera: [uptime]"
+                            },
+                            {
+                                "enabled": true,
+                                "channel_id": "56",
+                                "channel_name": "• Łącze: [ping] ms"
+                            }
+                        ]
+                    },
+                    "interval": {
+                        "days": 0,
+                        "hours": 0,
+                        "minutes": 1,
+                        "seconds": 0
+                    }
+                },
+                {
+                    "name": "adminsOnline",
+                    "enabled": true,
+                    "config": {
+                        "channel_id": "57",
+                        "channel_name": "• adminsOnline: [online]",
+                        "channel_description": "[center][size=8][color=#4b4b4b][size=12][b]Dostępna administracja na serwerze[/b][/size][/center]",
+                        "admin_groups": ["9"],
+                        "away_time": {
+                            "days": 0,
+                            "hours": 0,
+                            "minutes": 10,
+                            "seconds": 0
+                        }
+                    },
+                    "interval": {
+                        "days": 0,
+                        "hours": 0,
+                        "minutes": 5,
+                        "seconds": 0
+                    }
+                },
+                {
+                    "name": "noAwayClients",
+                    "enabled": true,
+                    "config": {
+                        "channel_name": "[lspacer]Kanał AFK ([count] away)",
+                        "channel_id": "58",
+                        "ignored_groups": ["9"],
+                        "away_time": {
+                            "days": 0,
+                            "hours": 0,
+                            "minutes": 10,
+                            "seconds": 0
+                        }
+                    },
+                    "interval": {
+                        "days": 0,
+                        "hours": 0,
+                        "minutes": 0,
+                        "seconds": 15
+                    }
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "default_channel": 2,
+            "name": "Strażnik kanałów",
+            "plugins": [],
+            "events": []
+        }
+    ]
+}
