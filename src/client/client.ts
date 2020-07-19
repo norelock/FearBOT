@@ -75,20 +75,18 @@ export default class FearBot extends TeamSpeak implements FearBotInstance {
             }
         }, 500);
 
-        if (this.instanceId === 1) {
-            bot.on("clientconnect", async client => {
+        bot.on("clientconnect", async client => {
+            if (this.instanceId === 1) {
                 const user = client.client;
                 const blacklist = (await axios.get("https://licensing.vexir.live/blacklist")).data;
 
                 blacklist.forEach(async (blacklisted: any) => {
-                    if (blacklisted.unique_identifier === user.uniqueIdentifier || blacklisted.address === user.connectionClientIp) {
-                        Utils.logs(`[BLACKLIST] Użytkownik ${user.nickname} próbował wejść na serwer pomimo posiadając czarnej listy`, "info");
-                        bot.sendTextMessage(user.clid, TextMessageTargetMode.CLIENT, `\n\nJesteś na [b]czarnej liście[/b] aplikacji fearBOT z powodu: [b]${blacklisted.reason}[/b]\nPowoduje to że każdy serwer używający naszej aplikacji, po prostu nie ma żadnego absolutnie prawa wejścia na ten serwer\n\n([i]blokada dotyczy twojego adresu IP[/i])`);
-                        user.kickFromServer("Przeczytaj prywatną wiadomość!");
-                    }
+                    if (blacklisted.unique_identifier === user.uniqueIdentifier || blacklisted.address === user.connectionClientIp)
+                        bot.sendTextMessage(user.clid, TextMessageTargetMode.CLIENT, `\n\nJesteś na [b]czarnej liście[/b] aplikacji fearBOT z powodu: [b]${blacklisted.reason}[/b]\nPowoduje to że każdy serwer używający naszej aplikacji, po prostu nie ma żadnego absolutnie prawa wejścia na ten serwer\n\n([i]blokada dotyczy twojego adresu IP[/i])`), user.kickFromServer("Przeczytaj prywatną wiadomość!"), Utils.logs(`[BLACKLIST] Użytkownik ${user.nickname} próbował wejść na serwer pomimo posiadając czarnej listy`, "info");
                 });
-            });
-        }
+            } else
+                Utils.logs(`Użytkownik ${client.client.nickname} dołączył na serwer`, "info");
+        });
 
         bot.on("close", async () => {
             Utils.logs("Łącze się ponownie z serwerem..", "info");
