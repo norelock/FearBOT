@@ -5,11 +5,12 @@ import { InstanceConfig, FearBotInstance } from "../utils/interfaces";
 import { connection_data as connectionData } from "../config.json";
 import { key as licenseKey } from "../licensedata.json";
 
+import License from "../utils/license";
+import Blacklist from "../utils/blacklist";
+
 import Plugins from "../plugins";
 import Events from "../events";
-import License from "../utils/license";
 import Utils from "../utils";
-import Axios from "axios";
 
 export default class FearBot extends TeamSpeak implements FearBotInstance {
     instanceId: number;
@@ -51,13 +52,12 @@ export default class FearBot extends TeamSpeak implements FearBotInstance {
             bot.clientMove(whoami.clientId, this.instanceConfig.default_channel.toString());
 
         const serverInfo = await bot.serverInfo();
-        const license = new License(
-            licenseKey,
-            serverInfo.virtualserverUniqueIdentifier
-        );
+
+        const blacklist = new Blacklist();
+        const license = new License(licenseKey, serverInfo);
 
         const startTimeout = setInterval(async () => {
-            if (license.canStart()) {
+            if (license.canStartApp()) {
                 setInterval(async () => {
                     await license.check();
                 }, 60 * 1000);
@@ -76,16 +76,7 @@ export default class FearBot extends TeamSpeak implements FearBotInstance {
         }, 500);
 
         bot.on("clientconnect", async client => {
-            if (this.instanceId === 1) {
-                const user = client.client;
-                const blacklist = (await axios.get("https://licensing.vexir.live/blacklist")).data;
-
-                blacklist.forEach(async (blacklisted: any) => {
-                    if (blacklisted.unique_identifier === user.uniqueIdentifier || blacklisted.address === user.connectionClientIp)
-                        bot.sendTextMessage(user.clid, TextMessageTargetMode.CLIENT, `\n\nJesteś na [b]czarnej liście[/b] aplikacji fearBOT z powodu: [b]${blacklisted.reason}[/b]\nPowoduje to że każdy serwer używający naszej aplikacji, po prostu nie ma żadnego absolutnie prawa wejścia na ten serwer\n\n([i]blokada dotyczy twojego adresu IP[/i])`), user.kickFromServer("Przeczytaj prywatną wiadomość!"), Utils.logs(`[BLACKLIST] Użytkownik ${user.nickname} próbował wejść na serwer pomimo posiadając czarnej listy`, "info");
-                });
-            } else
-                Utils.logs(`Użytkownik ${client.client.nickname} dołączył na serwer`, "info");
+            await blacklist.check(client.client);
         });
 
         bot.on("close", async () => {

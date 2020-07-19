@@ -1,121 +1,71 @@
-"use strict";
-
-import axios from "axios";
-import moment from "moment";
-import utils from ".";
-
 /**
 * @class
 * @classdesc Class that contains licensing of application
 */
 //
 
+import axios from "axios";
+import moment from "moment";
+import utils from ".";
+
 export default class License {
-    start: boolean;
-    logPrefix: string;
-    licensingUrl: string;
     licenseKey: string;
-    serverUid: string;
+    started: boolean;
+    serverInfo: any;
 
-    constructor(licenseKey: string, serverUid: string) {
-        moment.locale("pl");
-
-        this.logPrefix = "[LICENSE]";
-        this.start = false;
-        this.licensingUrl = "https://licensing.vexir.live";
-
+    constructor(licenseKey: string, serverInfo: any) {
         this.licenseKey = licenseKey;
-        this.serverUid = serverUid;
+        this.serverInfo = serverInfo;
+        this.started = false;
 
-        utils.logs(
-            `${this.logPrefix} Sprawdzanie informacji o licencji..`,
-            "info"
-        );
-
-        this.onStartCheck();
+        utils.logs("Sprawdzam licencje..", "info");
+        moment.locale("pl");
+        this.checkOnStart()
     }
 
-    public async canStart() {
-        return this.start;
-    }
+    private async checkOnStart() {
+        if (typeof this.serverInfo === "object" && this.licenseKey) {
+            const licenseInfo = (await axios.get("https://licensing.vexir.live/check/" + this.licenseKey)).data;
 
-    private async onStartCheck() {
-        if (this.licenseKey && this.serverUid) {
-            if (!this.start) {
-                const licenseGetter = await axios.get(
-                    `${this.licensingUrl}/check/${this.licenseKey}`
-                );
-                const getterData = licenseGetter.data;
-
-                if (getterData.error) {
-                    switch (getterData.error_code) {
-                        case "LICENSE_NOT_FOUND":
-                            return utils.logs(`${this.logPrefix} Ten klucz licencyjny nie istnieje!`, "error");
-                    }
+            if (licenseInfo.error)
+                switch (licenseInfo.errorCode) {
+                    case "LICENSE_NOT_FOUND":
+                        utils.logs("[LICENSE] Taki klucz licencyjny nie istnieje!", "error");
+                    case "LICENSE_BLOCKED":
+                        utils.logs("[LICENSE] Ten klucz licencyjny został zablokowany!", "error");
                 }
+            else
+                if (this.serverInfo.virtualserverUniqueIdentifier === licenseInfo.suid) {
+                    if (licenseInfo.is_expired)
+                        utils.logs("[LICENSE] Ten klucz licencyjny wygasł!", "error");
 
-                console.log(
-                    `\nInformacje o licencji:\n  ● Właściciel licencji: ${
-                        getterData.owner
-                    } (ID: ${getterData.suid})\n  ${
-                        getterData.is_expired
-                            ? "● Licencja wygasła"
-                            : "● Licencja zgaśnie w " +
-                              moment(getterData.expires).format("LLLL")
-                    }\n`
-                );
-
-                if (!getterData.is_expired) {
-                    utils.logs(
-                        `${this.logPrefix} Wczytano licencje, sprawdzanie SUID..`,
-                        "info"
-                    );
-
-                    if (getterData.suid === this.serverUid)
-                        utils.logs(
-                            `${this.logPrefix} Wczytuje aplikację..`,
-                            "info"
-                        ), this.start = true;
-                    else
-                        utils.logs(
-                            `${this.logPrefix} SUID nie zgadza się z aktualnym na serwerze.`,
-                            "error"
-                        );
+                    console.log(`\nInformacje o licencji:\n  ● Właściciel licencji: ${licenseInfo.owner} (ID: ${licenseInfo.suid})\n  ${licenseInfo.is_expired ? "● Licencja wygasła" : "● Licencja zgaśnie w " + moment(licenseInfo.expires).format("LLLL")}\n`), this.started = true;
                 } else
-                    utils.logs(
-                        `${this.logPrefix} Licencja wygasła. Aby ją przedłużyć - skontaktuj się z nami.`,
-                        "error"
-                    );
-            }
+                    utils.logs("[LICENSE] Ten klucz licencyjny nie należy do tego serwera!", "error");
         }
     }
 
+    public async canStartApp() {
+        return this.started;
+    }
+
     public async check() {
-        if (this.licenseKey && this.serverUid) {
-            if (this.start) {
-                const licenseGetter = await axios.get(
-                    `${this.licensingUrl}/check/${this.licenseKey}`
-                );
-                const getterData = licenseGetter.data;
+        if (typeof this.serverInfo === "object" && this.licenseKey) {
+            const licenseInfo = (await axios.get("https://licensing.vexir.live/check/" + this.licenseKey)).data;
 
-                if (getterData.error) {
-                    switch (getterData.error_code) {
-                        case "LICENSE_NOT_FOUND":
-                            return utils.logs(`${this.logPrefix} [CHECK] Licencja została usunięta. Nie możesz już dalej używać aplikacji.`, "error");
-                    }
+            if (licenseInfo.error)
+                switch (licenseInfo.errorCode) {
+                    case "LICENSE_NOT_FOUND":
+                        utils.logs("[LICENSE] Ten klucz licencyjny nie istnieje!", "error");
+                    case "LICENSE_BLOCKED":
+                        utils.logs("[LICENSE] Ten klucz licencyjny został zablokowany!", "error");
                 }
-
-                if (!getterData.is_expired) { //
-                    if (getterData.suid !== this.serverUid)
-                        utils.logs(
-                            `${this.logPrefix} [CHECK] SUID zostało zmienione przez właściciela licencji. Nie możesz już dalej używać aplikacji.`,
-                            "error"
-                        );
+            else {
+                if (this.serverInfo.virtualserverUniqueIdentifier === licenseInfo.suid) {
+                    if (licenseInfo.is_expired)
+                        utils.logs("[LICENSE] Ten klucz licencyjny wygasł!", "error");
                 } else
-                    utils.logs(
-                        `${this.logPrefix} [CHECK] Licencja wygasła. Nie możesz już dalej używać aplikacji.`,
-                        "error"
-                    );
+                    utils.logs("[LICENSE] Ten klucz licencyjny nie należy do tego serwera!", "error");
             }
         }
     }

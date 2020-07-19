@@ -1,4 +1,4 @@
-import TeamSpeak from "ts3-nodejs-library";
+import TeamSpeak, { TeamSpeakServer } from "ts3-nodejs-library";
 
 export interface InstanceFeatureConfig {
     channel_id?: string;
