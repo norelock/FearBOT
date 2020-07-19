@@ -36,7 +36,7 @@
                     "name": "serverName",
                     "enabled": true,
                     "config": {
-                        "server_name": "fearBOT • Oficjalny support ([online]/[max_slots])"
+                        "server_name": "fearBOT • Oficjalny support | [online]/[max_slots] ([percent]%)"
                     }
                 }
             ],

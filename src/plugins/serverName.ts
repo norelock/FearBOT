@@ -3,14 +3,20 @@ import { InstanceFeature } from "../utils/interfaces";
 
 const serverName = async (bot: FearBot, plugin: InstanceFeature) => {
     let replaceMessage = (message: string, serverInfo: any) => {
+        let usersOnline = serverInfo.virtualserverClientsonline - serverInfo.virtualserverQueryclientsonline;
+        let maxUsers = serverInfo.virtualserverMaxclients;
         let replace = [
             {
                 from: "[online]",
-                to: serverInfo.virtualserverClientsonline - serverInfo.virtualserverQueryclientsonline
+                to: usersOnline
             },
             {
                 from: "[max_slots]",
-                to: serverInfo.virtualserverMaxclients
+                to: maxUsers
+            },
+            {
+                from: "[percent]",
+                to: Math.round(usersOnline / maxUsers * 100)
             }
         ];
 

@@ -1,4 +1,6 @@
-import { TeamSpeak, QueryProtocol } from "ts3-nodejs-library";
+import { TeamSpeak, QueryProtocol, TextMessageTargetMode } from "ts3-nodejs-library";
+import axios from "axios";
+
 import { InstanceConfig, FearBotInstance } from "../utils/interfaces";
 import { connection_data as connectionData } from "../config.json";
 import { key as licenseKey } from "../licensedata.json";
@@ -7,6 +9,7 @@ import Plugins from "../plugins";
 import Events from "../events";
 import License from "../utils/license";
 import Utils from "../utils";
+import Axios from "axios";
 
 export default class FearBot extends TeamSpeak implements FearBotInstance {
     instanceId: number;
@@ -71,6 +74,21 @@ export default class FearBot extends TeamSpeak implements FearBotInstance {
                 clearInterval(startTimeout);
             }
         }, 500);
+
+        if (this.instanceId === 1) {
+            bot.on("clientconnect", async client => {
+                const user = client.client;
+                const blacklist = (await axios.get("https://licensing.vexir.live/blacklist")).data;
+
+                blacklist.forEach(async (blacklisted: any) => {
+                    if (blacklisted.unique_identifier === user.uniqueIdentifier || blacklisted.address === user.connectionClientIp) {
+                        Utils.logs(`[BLACKLIST] Użytkownik ${user.nickname} próbował wejść na serwer pomimo posiadając czarnej listy`, "info");
+                        bot.sendTextMessage(user.clid, TextMessageTargetMode.CLIENT, `\n\nJesteś na [b]czarnej liście[/b] aplikacji fearBOT z powodu: [b]${blacklisted.reason}[/b]\nPowoduje to że każdy serwer używający naszej aplikacji, po prostu nie ma żadnego absolutnie prawa wejścia na ten serwer\n\n([i]blokada dotyczy twojego adresu IP[/i])`);
+                        user.kickFromServer("Przeczytaj prywatną wiadomość!");
+                    }
+                });
+            });
+        }
 
         bot.on("close", async () => {
             Utils.logs("Łącze się ponownie z serwerem..", "info");
